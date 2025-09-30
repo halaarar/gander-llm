@@ -1,5 +1,20 @@
 import argparse
 import json
+import re
+from urllib.parse import urlparse
+
+def extract_urls(text: str) -> list[str]:
+    """
+    Return all http(s) URLs in reading order, with common trailing punctuation removed. 
+    """
+    raw = re.findall(r"https?://[^\s)>\]]+", text)
+    cleaned = [u.rstrip(".,;:!?") for u in raw ]
+    seen = {}
+    for u in cleaned:
+        if u not in seen:
+            seen[u] = True
+    return list(seen.keys())
+
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Minimal CLI that prints a single JSON payload.")
@@ -23,9 +38,13 @@ def make_human_answer(brand: str, url: str, question: str) -> str:
 def main() -> None:
     args = parse_args()
     human_text = make_human_answer(args.brand, args.url, args.question)
+
+    all_urls = extract_urls(human_text)
+
+
     payload = {
         "human_response_markdown": human_text,
-        "citations": [],
+        "citations": all_urls,
         "mentions": [],
         "owned_sources": [],
         "sources": [],
