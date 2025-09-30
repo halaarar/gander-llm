@@ -215,16 +215,27 @@ def main() -> None:
     
     if args.use_model:
         try:
-            human_text = call_model_answer(args.brand, args.url, args.question, args.model)
-            model_name = args.model
+            if args.provider == "ollama":
+                human_text = call_ollama_answer(
+                    args.brand, args.url, args.question, args.ollama_model,
+                    timeout=args.timeout, retries=args.retries
+                )
+                model_name = f"ollama:{args.ollama_model}"
+            else:
+                human_text = call_model_answer(
+                    args.brand, args.url, args.question, args.model,
+                    timeout=args.timeout, retries=args.retries
+                )
+                model_name = args.model
         except Exception as e:
             if args.debug:
                 print(f"[model-error] {e}", file=sys.stderr)
             human_text = make_human_answer(args.brand, args.url, args.question)
-            model_name = f"{args.model} (fallback: placeholder)"
+            model_name = f"{args.provider} (fallback: placeholder)"
     else:
         human_text = make_human_answer(args.brand, args.url, args.question)
         model_name = "placeholder"
+
 
 
     mentions = extract_mentions(human_text, args.brand)
