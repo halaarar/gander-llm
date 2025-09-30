@@ -322,14 +322,8 @@ def main() -> None:
     sources_used = 0
     context_text = ""
     context_urls = []
+    chosen = []
 
-
-    # Grounding pipeline guarded by budgets
-    if args.ground and args.max_searches > 0 and args.max_sources > 0:
-        # 1 search only (we respect the hard cap)
-        q = args.search_query or f"{args.brand} {args.question}"
-        results = ddg_search(q, timeout=args.timeout)
-        searches_used = 1 if results else 0
 
     # Grounding pipeline guarded by budgets
     if args.ground and args.max_searches > 0 and args.max_sources > 0:
@@ -340,7 +334,6 @@ def main() -> None:
         searches_used = 1 if results else 0
 
         # Prefer brand-owned URLs first when we have results
-        chosen = []
         if results:
             brand_host = host_of(args.url)
             owned_first, external_next = [], []
@@ -360,26 +353,8 @@ def main() -> None:
             if args.max_sources > 0 and args.url:
                 chosen = [args.url]
 
-    # fetch trimmed snippets
-    pairs = []
-    for u in chosen:
-        try:
-            sn = fetch_snippet(u, max_chars=args.snippet_chars, timeout=args.timeout)
-        except Exception:
-            continue
-        if sn:
-            pairs.append((u, sn))
-
-    context_urls = [u for (u, _snip) in pairs]
-    sources_used = len(pairs)
-    if pairs:
-        context_text = build_context(pairs)
-
-
-
-        # fetch trimmed snippets
+        # fetch trimmed snippets for chosen URLs
         pairs = []
-
         for u in chosen:
             try:
                 sn = fetch_snippet(u, max_chars=args.snippet_chars, timeout=args.timeout)
@@ -387,10 +362,12 @@ def main() -> None:
                 continue
             if sn:
                 pairs.append((u, sn))
+
         context_urls = [u for (u, _snip) in pairs]
         sources_used = len(pairs)
         if pairs:
             context_text = build_context(pairs)
+
 
 
     use_compact = bool(args.compact_prompt)

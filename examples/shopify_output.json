@@ -1,9 +1,11 @@
 {
-  "human_response_markdown": "### Problem Solved by Shopify\n\n*   **E-commerce Platform**: Provides a comprehensive platform for online stores to sell products.\n*   **Business Management Tools**: Offers tools to manage various aspects of a business, including inventory management, order fulfillment, and customer relationships.\n\nFor details, see https://shopify.com\n",
+  "human_response_markdown": "### Problem Solved by Shopify\n\n*   **E-commerce Management**: Shopify solves the problem of managing an online store, including product management, inventory tracking, order fulfillment, and shipping.\n*   **Business Operations**: It provides tools to manage every part of a business, including marketing, customer service, and financial management.\n*   **Scalability**: Shopify helps merchants scale their businesses efficiently, handling increased traffic and sales without manual intervention.\n\nFor details, see https://shopify.com\n",
   "citations": [
     "https://shopify.com"
   ],
   "mentions": [
+    "Shopify",
+    "Shopify",
     "Shopify"
   ],
   "owned_sources": [
