@@ -4,6 +4,8 @@ import re
 from urllib.parse import urlparse
 import os
 import requests
+from dotenv import load_dotenv
+load_dotenv() 
 
 def extract_urls(text: str) -> list[str]:
     """
