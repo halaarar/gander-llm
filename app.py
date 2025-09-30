@@ -6,6 +6,9 @@ import os
 import requests
 from dotenv import load_dotenv
 load_dotenv() 
+import sys
+import time
+import random
 
 def extract_urls(text: str) -> list[str]:
     """
@@ -81,6 +84,12 @@ def parse_args() -> argparse.Namespace:
     
     parser.add_argument("--use-model", type=int, default=0, help="1 to call the model, 0 to use placeholder.")
     parser.add_argument("--model", default="gpt-4o", help="Model name to use if --use-model=1.")
+    parser.add_argument("--output", help="If set, write the JSON to this file path.")
+    parser.add_argument("--debug", action="store_true", help="Print errors to stderr.")
+    parser.add_argument("--retries", type=int, default=2, help="Retries on 429/5xx.")
+    parser.add_argument("--timeout", type=int, default=30, help="HTTP timeout seconds.")
+    parser.add_argument("--provider", choices=["ollama", "openai"], default="ollama", help="Model provider: local Ollama (default) or OpenAI.") 
+    parser.add_argument("--ollama-model", default="llama3.2", help="Ollama model name to use when --provider=ollama.")
     return parser.parse_args()
 
 def make_human_answer(brand: str, url: str, question: str) -> str:
@@ -103,12 +112,12 @@ def extract_mentions(text: str, brand: str) -> list[str]:
     pattern = r"\b" + re.escape(brand) + r"\b"
     return re.findall(pattern, text)
 
-def call_model_answer(brand: str, url: str, question: str, model: str) -> str:
-    """
-    Call a chat-style model and return a clean, user-facing markdown answer.
+import time
+import random
 
-    Reads the API key from the OPENAI_API_KEY environment variable.
-    If anything fails, raises an exception so the caller can fall back.
+def call_model_answer(brand: str, url: str, question: str, model: str, timeout: int = 30, retries: int = 2) -> str:
+    """
+    Call a chat-style model with small retry/backoff on 429/5xx.
     """
     api_key = os.environ.get("OPENAI_API_KEY")
     if not api_key:
@@ -122,9 +131,7 @@ def call_model_answer(brand: str, url: str, question: str, model: str) -> str:
         "If you include links, keep them natural."
     )
     user_msg = (
-        f"Brand: {brand}\n"
-        f"Brand site: {url}\n"
-        f"Question: {question}\n\n"
+        f"Brand: {brand}\nBrand site: {url}\nQuestion: {question}\n\n"
         "Answer like a normal chat assistant for an average user."
     )
 
@@ -136,21 +143,29 @@ def call_model_answer(brand: str, url: str, question: str, model: str) -> str:
         ],
         "temperature": 0.3,
     }
-
     headers = {
         "Authorization": f"Bearer {api_key}",
         "Content-Type": "application/json",
     }
 
-    resp = requests.post(endpoint, headers=headers, json=payload, timeout=30)
-    resp.raise_for_status()
-    data = resp.json()
+    attempt = 0
+    while True:
+        attempt += 1
+        resp = requests.post(endpoint, headers=headers, json=payload, timeout=timeout)
+        if resp.status_code in (429, 500, 502, 503, 504):
+            if attempt > max(0, retries):
+                resp.raise_for_status()
+            # Exponential backoff with jitter: 0.5, 1, 2 sec (plus a tiny random)
+            sleep_s = min(2.0, 0.5 * (2 ** (attempt - 1))) + random.random() * 0.1
+            time.sleep(sleep_s)
+            continue
 
-    # Expect the first choice to contain the message content
-    content = data["choices"][0]["message"]["content"]
-    if not isinstance(content, str) or not content.strip():
-        raise RuntimeError("Model returned empty content")
-    return content.strip()
+        resp.raise_for_status()
+        data = resp.json()
+        content = data["choices"][0]["message"]["content"]
+        if not isinstance(content, str) or not content.strip():
+            raise RuntimeError("Model returned empty content")
+        return content.strip()
 
 
 
@@ -162,7 +177,8 @@ def main() -> None:
             human_text = call_model_answer(args.brand, args.url, args.question, args.model)
             model_name = args.model
         except Exception as e:
-            # Fall back to placeholder so the CLI still works
+            if args.debug:
+                print(f"[model-error] {e}", file=sys.stderr)
             human_text = make_human_answer(args.brand, args.url, args.question)
             model_name = f"{args.model} (fallback: placeholder)"
     else:
@@ -179,7 +195,6 @@ def main() -> None:
 
     owned, external = partition_owned(all_urls, args.url)
 
-    sources_included = len(owned) + len(external)
 
 
     payload = {
@@ -196,7 +211,14 @@ def main() -> None:
                 "sources_included": 0}, # Did not include any source snippets in context
         }
     }
-    print(json.dumps(payload, indent=2))
+    blob = json.dumps(payload, indent=2)
+    if args.output:
+        with open(args.output, "w", encoding="utf-8") as f:
+            f.write(blob)
+        print(args.output)
+    else:
+        print(blob)
+
 
 if __name__ == "__main__":
     main()

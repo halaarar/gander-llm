@@ -138,3 +138,4 @@ Both commands print a single JSON object to stdout.
 
 In this minimal version both numbers are 0 because we do not search or inject source snippets yet.
 
+docs: add Ollama local model instructions
