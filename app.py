@@ -74,6 +74,9 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--question", required=True, help="End-user question.")
     parser.add_argument("--max-searches", type=int, default=0, help="Hard cap on web searches to perform.")
     parser.add_argument("--max-sources", type=int, default=0, help="Hard cap on sources to include.")
+    
+    parser.add_argument("--use-model", type=int, default=0, help="1 to call the model, 0 to use placeholder.")
+    parser.add_argument("--model", default="gpt-4o", help="Model name to use if --use-model=1.")
     return parser.parse_args()
 
 def make_human_answer(brand: str, url: str, question: str) -> str:
