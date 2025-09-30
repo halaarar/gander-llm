@@ -167,7 +167,7 @@ def main() -> None:
             model_name = f"{args.model} (fallback: placeholder)"
     else:
         human_text = make_human_answer(args.brand, args.url, args.question)
-    model_name = "placeholder"
+        model_name = "placeholder"
 
 
     mentions = extract_mentions(human_text, args.brand)
