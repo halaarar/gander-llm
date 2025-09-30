@@ -139,3 +139,47 @@ Both commands print a single JSON object to stdout.
 In this minimal version both numbers are 0 because we do not search or inject source snippets yet.
 
 docs: add Ollama local model instructions
+
+
+### Run with a free local model (Ollama)
+
+1) Install Ollama
+
+```bash
+   macOS: `brew install ollama`
+   or download: https://ollama.com/download
+
+```
+
+2) Start the server
+
+```bash
+   Run `ollama serve` in a terminal and leave it open
+
+```
+
+
+3) Pull a small model
+
+```bash
+   `ollama pull llama3.2`
+
+```
+
+4) Test locally
+
+```bash
+   `ollama run llama3.2 "Say hello"`
+```
+
+5) Run the CLI
+
+```bash
+   python app.py \
+     --brand "ACME" \
+     --url "https://acme.com" \
+     --question "What does this brand offer?" \
+     --use-model 1 \
+     --provider ollama \
+     --ollama-model llama3.2
+```
