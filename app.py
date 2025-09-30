@@ -191,7 +191,9 @@ def main() -> None:
         "metadata": {
             "model": model_name,
             "budgets": {"max_searches": args.max_searches, "max_sources": args.max_sources},
-            "usage": {"searches": 0, "sources_included": sources_included},
+            "usage": {
+                "searches": 0, # no web searches yet
+                "sources_included": 0}, # Did not include any source snippets in context
         }
     }
     print(json.dumps(payload, indent=2))
