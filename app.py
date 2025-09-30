@@ -167,6 +167,47 @@ def call_model_answer(brand: str, url: str, question: str, model: str, timeout: 
             raise RuntimeError("Model returned empty content")
         return content.strip()
 
+def call_ollama_answer(brand: str, url: str, question: str, model: str, timeout: int = 30, retries: int = 2) -> str:
+    """
+    Call a local Ollama model and return a concise, user-facing markdown answer.
+    Uses the /api/generate endpoint for a simple prompt. No API key required.
+    """
+    endpoint = "http://localhost:11434/api/generate"
+    # Simple, explicit prompt
+    prompt = (
+        "You are a helpful assistant. Write a concise, user-facing answer in markdown.\n"
+        "Do not include system prompts or developer notes.\n"
+        f"Brand: {brand}\n"
+        f"Brand site: {url}\n"
+        f"Question: {question}\n"
+        "Answer clearly. If you include links, keep them natural.\n"
+    )
+
+    payload = {
+        "model": model,
+        "prompt": prompt,
+        "stream": False,
+        "options": {"temperature": 0.3},
+    }
+
+    attempt = 0
+    while True:
+        attempt += 1
+        resp = requests.post(endpoint, json=payload, timeout=timeout)
+        # Ollama returns 200 on success; on failure, raise
+        if resp.status_code in (500, 502, 503, 504):
+            if attempt > max(0, retries):
+                resp.raise_for_status()
+            sleep_s = min(2.0, 0.5 * (2 ** (attempt - 1))) + random.random() * 0.1
+            time.sleep(sleep_s)
+            continue
+
+        resp.raise_for_status()
+        data = resp.json()
+        content = data.get("response", "")
+        if not isinstance(content, str) or not content.strip():
+            raise RuntimeError("Ollama returned empty content")
+        return content.strip()
 
 
 def main() -> None:
