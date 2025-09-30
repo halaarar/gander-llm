@@ -109,6 +109,8 @@ def main() -> None:
 
     owned, external = partition_owned(all_urls, args.url)
 
+    sources_included = len(owned) + len(external)
+
 
     payload = {
         "human_response_markdown": human_text,
@@ -119,9 +121,8 @@ def main() -> None:
         "metadata": {
             "model": "placeholder",
             "budgets": {"max_searches": args.max_searches, "max_sources": args.max_sources},
-            "usage": {"searches": 0, "sources_included": 0},
-        },
-        "inputs": {"brand": args.brand, "url": args.url, "question": args.question},
+            "usage": {"searches": 0, "sources_included": sources_included},
+        }
     }
     print(json.dumps(payload, indent=2))
 
