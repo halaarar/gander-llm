@@ -86,9 +86,22 @@ def make_human_answer(brand: str, url: str, question: str) -> str:
         f"You might also compare third-party perspectives at https://example.org/review.\n"
     )
 
+def extract_mentions(text: str, brand: str) -> list[str]:
+    """
+    Return each exact-case occurrence of the brand as a whole word.
+    Deterministic and easy to explain.
+    """
+    if not brand:
+        return []
+    pattern = r"\b" + re.escape(brand) + r"\b"
+    return re.findall(pattern, text)
+
+
 def main() -> None:
     args = parse_args()
     human_text = make_human_answer(args.brand, args.url, args.question)
+    mentions = extract_mentions(human_text, args.brand)
+
 
     all_urls = extract_urls(human_text)
 
@@ -100,7 +113,7 @@ def main() -> None:
     payload = {
         "human_response_markdown": human_text,
         "citations": all_urls,
-        "mentions": [],
+        "mentions": mentions,
         "owned_sources": owned,
         "sources": external,
         "metadata": {
