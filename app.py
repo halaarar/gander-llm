@@ -15,6 +15,57 @@ def extract_urls(text: str) -> list[str]:
             seen[u] = True
     return list(seen.keys())
 
+def host_of(url: str) -> str:
+    """
+    Return the lowercased hostname of a URL, or empty string on failure.
+    """
+    try:
+        host = urlparse(url).netloc.strip().lower()
+        # Remove leading 'www.' to normalize common patterns
+        if host.startswith("www."):
+            host = host[4:]
+        return host.lstrip(".")
+    except Exception:
+        return ""
+    
+def is_owned(host: str, brand_host: str) -> bool:
+    """
+    A URL is owned if its host equals the brand host
+    or is a subdomain of the brand host.
+    """
+    if not host or not brand_host:
+        return False
+    if host == brand_host:
+        return True
+    return host.endswith("." + brand_host)
+    
+def registrable_domain(host: str) -> str:
+    """
+    Approximate the brand's base domain by using the host as-is.
+    For this exercise, we treat 'gandergeo.com' as the brand domain and
+    any subdomain like 'sub.gandergeo.com' as owned.
+    """
+    return host 
+
+
+def partition_owned(urls: list[str], brand_site_url: str) -> tuple[list[str], list[str]]:
+    """
+    Split URLs into owned vs external using host equality or subdomain checks.
+    """
+    brand_host = host_of(brand_site_url)
+    owned: list[str] = []
+    external: list[str] = []
+    for u in urls:
+        h = host_of(u)
+        if is_owned(h, brand_host):
+            owned.append(u)
+        else:
+            external.append(u)
+    # De-duplicate while preserving order
+    owned = list(dict.fromkeys(owned))
+    external = list(dict.fromkeys(external))
+    return owned, external
+
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Minimal CLI that prints a single JSON payload.")
@@ -42,12 +93,16 @@ def main() -> None:
     all_urls = extract_urls(human_text)
 
 
+
+    owned, external = partition_owned(all_urls, args.url)
+
+
     payload = {
         "human_response_markdown": human_text,
         "citations": all_urls,
         "mentions": [],
-        "owned_sources": [],
-        "sources": [],
+        "owned_sources": owned,
+        "sources": external,
         "metadata": {
             "model": "placeholder",
             "budgets": {"max_searches": args.max_searches, "max_sources": args.max_sources},
