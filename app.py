@@ -150,9 +150,24 @@ def call_model_answer(brand: str, url: str, question: str, model: str) -> str:
         raise RuntimeError("Model returned empty content")
     return content.strip()
 
+
+
 def main() -> None:
     args = parse_args()
-    human_text = make_human_answer(args.brand, args.url, args.question)
+    
+    if args.use_model:
+        try:
+            human_text = call_model_answer(args.brand, args.url, args.question, args.model)
+            model_name = args.model
+        except Exception as e:
+            # Fall back to placeholder so the CLI still works
+            human_text = make_human_answer(args.brand, args.url, args.question)
+            model_name = f"{args.model} (fallback: placeholder)"
+    else:
+        human_text = make_human_answer(args.brand, args.url, args.question)
+    model_name = "placeholder"
+
+
     mentions = extract_mentions(human_text, args.brand)
 
 
@@ -172,7 +187,7 @@ def main() -> None:
         "owned_sources": owned,
         "sources": external,
         "metadata": {
-            "model": "placeholder",
+            "model": model_name,
             "budgets": {"max_searches": args.max_searches, "max_sources": args.max_sources},
             "usage": {"searches": 0, "sources_included": sources_included},
         }
