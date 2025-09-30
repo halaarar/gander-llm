@@ -2,6 +2,8 @@ import argparse
 import json
 import re
 from urllib.parse import urlparse
+import os
+import requests
 
 def extract_urls(text: str) -> list[str]:
     """
@@ -99,6 +101,54 @@ def extract_mentions(text: str, brand: str) -> list[str]:
     pattern = r"\b" + re.escape(brand) + r"\b"
     return re.findall(pattern, text)
 
+def call_model_answer(brand: str, url: str, question: str, model: str) -> str:
+    """
+    Call a chat-style model and return a clean, user-facing markdown answer.
+
+    Reads the API key from the OPENAI_API_KEY environment variable.
+    If anything fails, raises an exception so the caller can fall back.
+    """
+    api_key = os.environ.get("OPENAI_API_KEY")
+    if not api_key:
+        raise RuntimeError("Missing OPENAI_API_KEY environment variable")
+
+    endpoint = "https://api.openai.com/v1/chat/completions"
+
+    system_msg = (
+        "You are a helpful assistant. Write a concise, user-facing answer in markdown. "
+        "Do not include prompts, system messages, or developer notes. "
+        "If you include links, keep them natural."
+    )
+    user_msg = (
+        f"Brand: {brand}\n"
+        f"Brand site: {url}\n"
+        f"Question: {question}\n\n"
+        "Answer like a normal chat assistant for an average user."
+    )
+
+    payload = {
+        "model": model,
+        "messages": [
+            {"role": "system", "content": system_msg},
+            {"role": "user", "content": user_msg},
+        ],
+        "temperature": 0.3,
+    }
+
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json",
+    }
+
+    resp = requests.post(endpoint, headers=headers, json=payload, timeout=30)
+    resp.raise_for_status()
+    data = resp.json()
+
+    # Expect the first choice to contain the message content
+    content = data["choices"][0]["message"]["content"]
+    if not isinstance(content, str) or not content.strip():
+        raise RuntimeError("Model returned empty content")
+    return content.strip()
 
 def main() -> None:
     args = parse_args()
