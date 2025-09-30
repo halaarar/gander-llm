@@ -1,0 +1,24 @@
+{
+  "human_response_markdown": "### Problem Solved by Shopify\n\n*   **E-commerce Platform**: Provides a comprehensive platform for online stores to sell products.\n*   **Business Management Tools**: Offers tools to manage various aspects of a business, including inventory management, order fulfillment, and customer relationships.\n\nFor details, see https://shopify.com\n",
+  "citations": [
+    "https://shopify.com"
+  ],
+  "mentions": [
+    "Shopify"
+  ],
+  "owned_sources": [
+    "https://shopify.com"
+  ],
+  "sources": [],
+  "metadata": {
+    "model": "ollama:llama3.2",
+    "budgets": {
+      "max_searches": 1,
+      "max_sources": 1
+    },
+    "usage": {
+      "searches": 0,
+      "sources_included": 1
+    }
+  }
+}
