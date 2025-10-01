@@ -1,26 +1,23 @@
 {
-  "human_response_markdown": "### Problem Solved by Shopify\n\n*   **E-commerce Management**: Shopify solves the problem of managing an online store, including product management, inventory tracking, order fulfillment, and shipping.\n*   **Business Operations**: It provides tools to manage every part of a business, including marketing, customer service, and financial management.\n*   **Scalability**: Shopify helps merchants scale their businesses efficiently, handling increased traffic and sales without manual intervention.\n\nFor details, see https://shopify.com\n",
-  "citations": [
-    "https://shopify.com"
-  ],
+  "human_response_markdown": "### Problem Solved by Shopify\n\n*   **E-commerce Complexity**: Simplifies online store management, allowing merchants to focus on sales and growth.\n*   **Scalability**: Enables businesses to scale their operations efficiently, handling increased traffic and orders.\n*   **Inventory Management**: Streamlines product inventory tracking, order fulfillment, and shipping processes.\n*   **Payment Processing**: Handles secure payment processing, reducing administrative burdens.\n*   **Marketing and Sales**: Provides tools for marketing, sales, and customer engagement, helping merchants reach new customers.",
+  "citations": [],
   "mentions": [
-    "Shopify",
-    "Shopify",
     "Shopify"
   ],
-  "owned_sources": [
-    "https://shopify.com"
-  ],
+  "owned_sources": [],
   "sources": [],
   "metadata": {
     "model": "ollama:llama3.2",
     "budgets": {
-      "max_searches": 1,
-      "max_sources": 1
+      "max_searches": 0,
+      "max_sources": 0
     },
     "usage": {
       "searches": 0,
-      "sources_included": 1
+      "sources_included": 0,
+      "input_tokens": 45,
+      "output_tokens": 113,
+      "total_tokens": 158
     }
   }
 }
