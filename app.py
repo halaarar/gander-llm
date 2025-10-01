@@ -11,6 +11,7 @@ import time
 import random
 import html
 from urllib.parse import quote_plus
+import tiktoken
 
 def extract_urls(text: str) -> list[str]:
     """
@@ -139,7 +140,7 @@ import time
 import random
 
 def call_model_answer(brand: str, url: str, question: str, model: str,
-                      timeout: int = 30, retries: int = 2, context: str = "", compact: bool = True) -> str:
+                      timeout: int = 30, retries: int = 2, context: str = "", compact: bool = True) -> tuple[str, int, int]:
     """
     Call a chat-style model with small retry/backoff on 429/5xx.
     """
@@ -196,10 +197,13 @@ def call_model_answer(brand: str, url: str, question: str, model: str,
         content = data["choices"][0]["message"]["content"]
         if not isinstance(content, str) or not content.strip():
             raise RuntimeError("Model returned empty content")
-        return content.strip()
+        content = content.strip()
+        input_tokens = count_tokens(system_msg + user_msg, model)
+        output_tokens = count_tokens(content, model)
+        return content, input_tokens, output_tokens
 
 def call_ollama_answer(brand: str, url: str, question: str, model: str,
-                       timeout: int = 30, retries: int = 2, context: str = "", compact: bool = True) -> str:
+                       timeout: int = 30, retries: int = 2, context: str = "", compact: bool = True) -> tuple[str, int, int]:
     """
     Call a local Ollama model and return a concise, user-facing markdown answer.
     Uses the /api/generate endpoint for a simple prompt. No API key required.
@@ -246,7 +250,10 @@ def call_ollama_answer(brand: str, url: str, question: str, model: str,
         content = data.get("response", "")
         if not isinstance(content, str) or not content.strip():
             raise RuntimeError("Ollama returned empty content")
-        return content.strip()
+        content = content.strip()
+        input_tokens = count_tokens(prompt, "gpt-4o")
+        output_tokens = count_tokens(content, "gpt-4o")
+        return content, input_tokens, output_tokens
 
 def ddg_search(query: str, timeout: int = 15) -> list[str]:
     """
@@ -290,6 +297,13 @@ def ddg_search(query: str, timeout: int = 15) -> list[str]:
             cleaned.append(u)
 
     return cleaned[:10]
+
+def count_tokens(text: str, model: str = "gpt-4o") -> int:
+    try:
+        enc = tiktoken.encoding_for_model(model)
+    except KeyError:
+        enc = tiktoken.get_encoding("cl100k_base")
+    return len(enc.encode(text))
 
 def fetch_snippet(source_url: str, max_chars: int = 600, timeout: int = 15) -> str:
     """
@@ -345,6 +359,8 @@ def main() -> None:
     context_text = ""
     context_urls = []
     chosen = []
+    input_tokens = 0
+    output_tokens = 0
 
 
     # Grounding pipeline guarded by budgets
@@ -397,13 +413,13 @@ def main() -> None:
     if args.use_model:
         try:
             if args.provider == "ollama":
-                human_text = call_ollama_answer(
+                human_text, input_tokens, output_tokens = call_ollama_answer(
                     args.brand, args.url, args.question, args.ollama_model,
                     timeout=args.timeout, retries=args.retries, context=context_text, compact=use_compact
                 )
                 model_name = f"ollama:{args.ollama_model}"
             else:
-                human_text = call_model_answer(
+                human_text, input_tokens, output_tokens = call_model_answer(
                     args.brand, args.url, args.question, args.model,
                     timeout=args.timeout, retries=args.retries, context=context_text, compact=use_compact
                 )
@@ -445,11 +461,13 @@ def main() -> None:
             "budgets": {"max_searches": args.max_searches, "max_sources": args.max_sources},
             "usage": {
                 "searches": searches_used,
-                "sources_included": sources_used
+                "sources_included": sources_used,
+                "input_tokens": input_tokens,
+                "output_tokens": output_tokens,
+                "total_tokens": input_tokens + output_tokens
             },
         }
     }
-
     blob = json.dumps(payload, indent=2)
     if args.output:
         with open(args.output, "w", encoding="utf-8") as f:
