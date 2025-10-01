@@ -1,23 +1,27 @@
 {
-  "human_response_markdown": "### Problem Solved by Shopify\n\n*   **E-commerce Complexity**: Simplifies online store management, allowing merchants to focus on sales and growth.\n*   **Scalability**: Enables businesses to scale their operations efficiently, handling increased traffic and orders.\n*   **Inventory Management**: Streamlines product inventory tracking, order fulfillment, and shipping processes.\n*   **Payment Processing**: Handles secure payment processing, reducing administrative burdens.\n*   **Marketing and Sales**: Provides tools for marketing, sales, and customer engagement, helping merchants reach new customers.",
-  "citations": [],
+  "human_response_markdown": "### Problem Solved by Shopify\n\n*   **All-in-one commerce solution**: Provides a comprehensive platform for businesses to manage various aspects of their operations, including e-commerce, inventory management, order fulfillment, and more.\n*   **Streamlined business operations**: Helps merchants automate tasks, reduce manual labor, and increase productivity, enabling them to focus on growth and customer satisfaction.\n*   **Scalability and flexibility**: Supports businesses of all sizes and types, from small startups to large enterprises, with customizable features and integrations.\n\nFor details, see https://shopify.com\n",
+  "citations": [
+    "https://shopify.com"
+  ],
   "mentions": [
     "Shopify"
   ],
-  "owned_sources": [],
+  "owned_sources": [
+    "https://shopify.com"
+  ],
   "sources": [],
   "metadata": {
     "model": "ollama:llama3.2",
     "budgets": {
-      "max_searches": 0,
-      "max_sources": 0
+      "max_searches": 1,
+      "max_sources": 2
     },
     "usage": {
       "searches": 0,
-      "sources_included": 0,
-      "input_tokens": 45,
-      "output_tokens": 113,
-      "total_tokens": 158
+      "sources_included": 1,
+      "input_tokens": 103,
+      "output_tokens": 107,
+      "total_tokens": 210
     }
   }
 }
