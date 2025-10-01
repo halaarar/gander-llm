@@ -24,6 +24,28 @@ def extract_urls(text: str) -> list[str]:
             seen[u] = True
     return list(seen.keys())
 
+def extract_citations(text: str) -> list[str]:
+    lines = text.split('\n')
+    citations = []
+    seen = set()
+    
+    for line in lines:
+        urls = re.findall(r"https?://[^\s)>\]]+", line)
+        if not urls:
+            continue
+            
+        cleaned_urls = [u.rstrip(".,;:!?") for u in urls]
+        
+        words = re.findall(r'\b[A-Z][a-zA-Z]+\b', line)
+        
+        if words:
+            for u in cleaned_urls:
+                if u not in seen:
+                    citations.append(u)
+                    seen.add(u)
+    
+    return citations
+
 def host_of(url: str) -> str:
     """
     Return the lowercased hostname of a URL, or empty string on failure.
@@ -402,10 +424,11 @@ def main() -> None:
     mentions = extract_mentions(human_text, args.brand)
 
     # URLs that appear in the final answer only
-    citations = extract_urls(human_text)
+    citations = extract_citations(human_text)
 
     # Everything used to form the answer: answer links plus grounded context URLs
-    used_urls = list(dict.fromkeys(citations + context_urls))
+    answer_urls = extract_urls(human_text)
+    used_urls = list(dict.fromkeys(answer_urls + context_urls))
 
     owned, external = partition_owned(used_urls, args.url)
 
