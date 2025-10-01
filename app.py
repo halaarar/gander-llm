@@ -230,7 +230,7 @@ def call_ollama_answer(brand: str, url: str, question: str, model: str,
         "model": model,
         "prompt": prompt,
         "stream": False,
-        "options": {"temperature": 0.3},
+        "options": {"temperature": 0.0},
     }
 
     attempt = 0
